@@ -21,13 +21,7 @@ router.post(
     min: 2,
   }),
   body("email").exists().isEmail(),
-  body("phone_no")
-    .exists()
-    .isLength({
-      max: 13,
-      min: 13,
-    })
-    .isMobilePhone(),
+  body("phone_no").exists().isMobilePhone(),
   body("msg").exists().isLength({ max: 500, min: 1 }),
   sendEmailController
 );

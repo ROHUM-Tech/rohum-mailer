@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { validationResult } from "express-validator";
+import counterModel from "../models/counterModel.js";
 dotenv.config();
 
 let mailContent = ``;
@@ -8,9 +9,9 @@ let mailContent = ``;
 const sendEmailController = async (req, res) => {
   const result = validationResult(req);
   if (!result.isEmpty()) {
+    // console.log(result.array());
     return res.status(400).json({ error: "invalid fields" });
   }
-
   if (!req.body.name || !req.body.email || !req.body.phone_no)
     return res.status(400).json({ msg: "please enter all fields" });
 
@@ -30,7 +31,6 @@ const sendEmailController = async (req, res) => {
       pass: process.env.EPASS,
     },
   });
-
   const mailOptions = {
     from: process.env.EUSER,
     to: process.env.EUSER,
@@ -38,8 +38,26 @@ const sendEmailController = async (req, res) => {
     text: mailContent,
   };
 
-  //await sendMail(transporter, mailOptions);
-  return res.sendStatus(200);
+  try {
+    const temp = await counterModel.findOneAndUpdate(
+      { id: 999 },
+      { $inc: { count: 1 } },
+      { new: true }
+    );
+    if (!temp) {
+      await counterModel.create({ id: 999, count: 1 });
+    } else {
+      if (temp.count > 450) {
+        return res
+          .status(400)
+          .json({ msg: "Emails for today have been exhausted" });
+      }
+    }
+    await sendMail(transporter, mailOptions);
+    return res.status(200).json({ msg: "email sent successfully" });
+  } catch (error) {
+    return res.sendStatus(500);
+  }
 };
 
 const sendMail = async (transporter, mailOptions) => {

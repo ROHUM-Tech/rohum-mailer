@@ -9,11 +9,11 @@ const PORT = 3943;
 dotenv.config();
 
 try {
-  mongoose.connect(DB_IP);
+  mongoose.connect(process.env.MONGO_STRING);
   console.log("connected to DB");
 } catch (error) {
   console.log(error);
-  throw new Error("Could'nt connect to db");
+  // throw new Error("Could'nt connect to db");
 }
 
 const whiteList = [process.env.WHITELIST];
@@ -23,7 +23,7 @@ const corsOptions = {
     if (whiteList.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(console.error(new Error("blocked by cors error")));
+      callback(new Error("blocked by cors error"));
     }
   },
   credentials: true,
@@ -31,6 +31,14 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use((err, req, res, next) => {
+  if (err.message === "blocked by cors error") {
+    console.log("blocked by cors" + req.ip);
+    res.status(403).json({ message: "CORS error: Access denied" });
+  } else {
+    next(err); // pass other errors
+  }
+});
 
 app.use(express.json());
 app.use(reqLogger_middleware);

@@ -4,6 +4,8 @@ import cors from "cors";
 import emailRoute from "./routes/email.routes.js";
 import { reqLogger_middleware } from "./middleware/reqLogger.js";
 import dotenv from "dotenv";
+import cron from "node-cron";
+import counterModel from "./models/counterModel.js";
 const app = express();
 const PORT = 3943;
 dotenv.config();
@@ -15,6 +17,29 @@ try {
   console.log(error);
   // throw new Error("Could'nt connect to db");
 }
+
+cron.schedule(
+  "10 12 * * *",
+  async () => {
+    // console.log("scheduler");
+    try {
+      const temp = await counterModel.findOneAndUpdate(
+        { id: 999 },
+        { count: 1 },
+        { new: true }
+      );
+      if (!temp) {
+        await counterModel.create({ id: 999, count: 1 });
+      }
+      console.log("counter updated");
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  {
+    timezone: "Asia/Kolkata",
+  }
+);
 
 const whiteList = [process.env.WHITELIST];
 const corsOptions = {

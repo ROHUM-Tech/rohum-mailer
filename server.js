@@ -13,7 +13,7 @@ try {
   console.log("connected to DB");
 } catch (error) {
   console.log(error);
-  // throw new Error("Could'nt connect to db");
+  throw new Error("Could'nt connect to db");
 }
 
 const whiteList = [process.env.WHITELIST];
